@@ -21,10 +21,14 @@ jobs:
       - name: Run fetch
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB || 'newsdb' }}
         run: |
           python scripts/fetch_rss.py
-      - name: Run process (mock)
+      - name: Run process
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB || 'newsdb' }}
         run: |
           python scripts/process_article.py

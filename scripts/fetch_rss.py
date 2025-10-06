@@ -13,22 +13,11 @@ from datetime import datetime
 from typing import Dict
 
 import feedparser
-from pymongo import MongoClient
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+
+from utils.db import get_db
 
 FEEDS_FILE = os.path.join(os.path.dirname(__file__), "feeds.json")
-
-load_dotenv()
-MONGODB_URI = os.environ.get("MONGODB_URI")
-DB_NAME = os.environ.get("MONGODB_DB", "newsdb")
-
-
-def get_db():
-    if not MONGODB_URI:
-        raise RuntimeError("MONGODB_URI not set. Copy .env.example to .env and set MONGODB_URI")
-    client = MongoClient(MONGODB_URI)
-    return client[DB_NAME]
 
 
 def extract_text(html: str) -> str:

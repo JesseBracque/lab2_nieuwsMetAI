@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  api:
+    build: .
+    image: nieuwsmetai:latest
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

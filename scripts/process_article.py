@@ -9,33 +9,15 @@ This file intentionally contains a mock `call_cohere` implementation so you can 
 the pipeline before adding real API keys.
 """
 from __future__ import annotations
-import os
 from datetime import datetime
-from typing import Dict
 
-from pymongo import MongoClient
-from dotenv import load_dotenv
-
-load_dotenv()
-MONGODB_URI = os.environ.get("MONGODB_URI")
-DB_NAME = os.environ.get("MONGODB_DB", "newsdb")
+from utils.db import get_db
+from app.cohere_client import client as cohere_client
 
 
-def get_db():
-    if not MONGODB_URI:
-        raise RuntimeError("MONGODB_URI not set. Copy .env.example to .env and set MONGODB_URI")
-    client = MongoClient(MONGODB_URI)
-    return client[DB_NAME]
-
-
-def call_cohere_mock(text: str, target_lang: str = "nl") -> str:
-    """A deterministic mock that pretends to "translate" by adding a prefix.
-    Replace this with a real Cohere call later.
-    """
-    return f"[{target_lang.upper()} TRANSLATION - MOCK]\n" + text[:200]
-
-
-def process_one(db):
+def process_one(db=None):
+    if db is None:
+        db = get_db()
     coll = db.articles
     doc = coll.find_one({"status": "fetched"})
     if not doc:
@@ -43,13 +25,25 @@ def process_one(db):
         return
     print(f"Processing {doc.get('url')}")
     text = doc.get("content_text") or doc.get("content_raw") or ""
-    translated = call_cohere_mock(text)
+    # call the cohere client; it may return a str or a tuple/dict with text+meta in future
+    translated = cohere_client.translate_and_rewrite(text, target_lang="nl")
+    # If the client ever returns a dict with text + meta, normalize it here
+    if isinstance(translated, dict):
+        text_out = translated.get("text")
+        meta = translated.get("meta")
+    else:
+        text_out = translated
+        meta = None
+
     translation_entry = {
         "lang": "nl",
-        "text": translated,
-        "model": "mock",
+        "text": text_out,
+        "model": getattr(cohere_client, "_client", None) and "cohere" or "mock",
+        "prompt": f"Vertaal en herschrijf naar nl (automatisch)",
         "created_at": datetime.utcnow(),
     }
+    if meta:
+        translation_entry["meta"] = meta
     coll.update_one({"_id": doc["_id"]}, {"$push": {"translations": translation_entry}, "$set": {"status": "ready", "processed_at": datetime.utcnow()}})
     print("Done")
 

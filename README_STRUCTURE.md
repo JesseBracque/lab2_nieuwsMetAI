@@ -22,3 +22,19 @@ Files created:
 - `requirements.txt`, `.env.example`, `.gitignore`
 
 Reminder: Do NOT commit real secrets. Use GitHub Secrets for Actions.
+
+DigitalOcean deploy (quick steps)
+1. Create a DigitalOcean account and create an App (or use the App Platform).
+2. Connect your GitHub repo and choose the branch `main`.
+3. Build command: leave empty (Dockerfile present) or use `pip install -r requirements.txt` and start `uvicorn app.api:app --host 0.0.0.0 --port $PORT`.
+4. Set environment variables in DigitalOcean: `MONGODB_URI`, `COHERE_API_KEY`, `MONGODB_DB` (optional).
+5. After deployment, set DNS: create a CNAME for `api.yourdomain.com` pointing to the DigitalOcean app hostname (provided by DigitalOcean).
+
+Frontend on GitHub Pages with custom domain
+1. In your repo `web/` contains static files. Commit them and create GitHub Actions to deploy `web/` to Pages (already configured in `.github/workflows/deploy.yml`).
+2. In GitHub repo settings -> Pages, set custom domain and follow the instructions to add A/CNAME records at your registrar.
+3. For `api.yourdomain.com`, add a CNAME to the backend host (DigitalOcean app hostname).
+
+Next steps I can help with:
+- Create a small `generate_static.py` that builds article pages into `web/` (if you later prefer static builds).
+- Create a simple GitHub Action to auto-deploy Docker to DigitalOcean using their CLI or App integration.

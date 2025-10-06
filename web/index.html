@@ -14,15 +14,24 @@
   <div id="list">Laden…</div>
 
   <script>
+    // This frontend reads web/config.json at deploy-time to know the API base URL.
+    const DEFAULT_API = 'https://api.example.com'; // replace with your API host or use config.json
+
     async function load(){
+      let API_BASE = DEFAULT_API;
       try{
-        const res = await fetch('/articles');
-        if(!res.ok) throw new Error('API error');
+        const cfg = await fetch('config.json').then(r=>r.json()).catch(()=>null);
+        if(cfg && cfg.API_BASE) API_BASE = cfg.API_BASE;
+      }catch(e){}
+
+      try{
+        const res = await fetch(API_BASE.replace(/\/$/, '') + '/articles');
+        if(!res.ok) throw new Error('API error: '+res.status);
         const data = await res.json();
         const root = document.getElementById('list');
-        if(data.length===0) root.textContent = 'Geen artikelen gevonden.';
+        if(!data || data.length===0) root.textContent = 'Geen artikelen gevonden.';
         else{
-          root.innerHTML = data.map(a=>`<div class="article"><a href="${a.url}" target="_blank">${a.title||a.url}</a></div>`).join('')
+          root.innerHTML = data.map(a=>`<div class="article"><a href="article.html?id=${a.id}">${a.title||a.url}</a></div>`).join('')
         }
       }catch(e){
         document.getElementById('list').textContent = 'Kon artikelen niet laden: '+e;

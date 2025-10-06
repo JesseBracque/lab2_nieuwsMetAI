@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NieuwsMetAI - Artikel</title>
+  <style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}</style>
+</head>
+<body>
+  <a href="/">← Terug</a>
+  <h1 id="title">Laden…</h1>
+  <div id="content">Laden…</div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const DEFAULT_API = 'https://api.example.com';
+
+    async function load(){
+      let API_BASE = DEFAULT_API;
+      try{
+        const cfg = await fetch('config.json').then(r=>r.json()).catch(()=>null);
+        if(cfg && cfg.API_BASE) API_BASE = cfg.API_BASE;
+      }catch(e){}
+      try{
+        const res = await fetch(API_BASE.replace(/\/$/, '') + '/articles/' + encodeURIComponent(id));
+        if(!res.ok) throw new Error('API error: '+res.status);
+        const a = await res.json();
+        document.getElementById('title').textContent = a.title || a.url;
+        document.getElementById('content').textContent = a.content_text || a.content_raw || '';
+      }catch(e){
+        document.getElementById('content').textContent = 'Kon artikel niet laden: '+e;
+      }
+    }
+    if(!id) document.getElementById('content').textContent = 'Geen artikel-id opgegeven.';
+    else load();
+  </script>
+</body>
+</html>
