@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NieuwsMetAI - demo</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
+    .article{border-bottom:1px solid #eee;padding:8px 0}
+  </style>
+</head>
+<body>
+  <h1>NieuwsMetAI (demo)</h1>
+  <div id="list">Laden…</div>
+
+  <script>
+    async function load(){
+      try{
+        const res = await fetch('/articles');
+        if(!res.ok) throw new Error('API error');
+        const data = await res.json();
+        const root = document.getElementById('list');
+        if(data.length===0) root.textContent = 'Geen artikelen gevonden.';
+        else{
+          root.innerHTML = data.map(a=>`<div class="article"><a href="${a.url}" target="_blank">${a.title||a.url}</a></div>`).join('')
+        }
+      }catch(e){
+        document.getElementById('list').textContent = 'Kon artikelen niet laden: '+e;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
