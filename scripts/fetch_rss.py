@@ -24,7 +24,7 @@ from utils.db import get_db
 from utils.tagging import generate_tags
 
 FEEDS_FILE = os.path.join(os.path.dirname(__file__), "feeds.json")
-MIN_CONTENT_LEN = 1000  # ~halve pagina tekst
+MIN_CONTENT_LEN = 700  # minimale lengte voor acceptatie
 
 
 def extract_text(html: str) -> str:
@@ -230,6 +230,9 @@ def fetch_feed(db, feed_cfg: Dict):
                 coll.update_one({"_id": existing["_id"]}, {"$set": update})
             continue
         # New doc (after attempting full fetch above)
+        # Enforce minimal content length
+        if not doc.get("content_text") or len(doc["content_text"]) < MIN_CONTENT_LEN:
+            continue
         doc["source"] = {"name": feed_cfg.get("name"), "feed_url": url}
         # compute tags on insert
         doc["tags"] = generate_tags(doc.get("content_text") or "", doc.get("title") or "", doc["source"]["name"], max_tags=1)
