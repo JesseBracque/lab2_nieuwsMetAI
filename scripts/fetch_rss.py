@@ -229,10 +229,10 @@ def fetch_feed(db, feed_cfg: Dict):
                 }
                 coll.update_one({"_id": existing["_id"]}, {"$set": update})
             continue
-    # New doc (after attempting full fetch above)
+        # New doc (after attempting full fetch above)
         doc["source"] = {"name": feed_cfg.get("name"), "feed_url": url}
         # compute tags on insert
-    doc["tags"] = generate_tags(doc.get("content_text") or "", doc.get("title") or "", doc["source"]["name"], max_tags=1)
+        doc["tags"] = generate_tags(doc.get("content_text") or "", doc.get("title") or "", doc["source"]["name"], max_tags=1)
         coll.insert_one(doc)
         inserted += 1
     print(f"Inserted {inserted} new items from {url}")

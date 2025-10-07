@@ -1,0 +1,13 @@
+[Unit]
+Description=NieuwsMetAI: refresh feeds (purge+refetch)
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/lab2_nieuwsMetAI
+ExecStart=/usr/bin/docker compose exec -T api python3 scripts/refresh_feeds.py
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

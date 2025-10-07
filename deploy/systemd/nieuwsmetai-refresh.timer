@@ -1,0 +1,10 @@
+[Unit]
+Description=Run NieuwsMetAI feed refresh every 6 hours
+
+[Timer]
+OnCalendar=*-*-* 00/6:00:00
+Persistent=true
+Unit=nieuwsmetai-refresh.service
+
+[Install]
+WantedBy=timers.target

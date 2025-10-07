@@ -11,19 +11,9 @@ DB_NAME = os.environ.get("MONGODB_DB", "newsdb")
 
 
 def get_db() -> Any:
-    """Return a DB-like object. If MONGODB_URI is set, use real MongoDB, otherwise
-    fall back to mongomock for local testing.
-    """
-    if MONGODB_URI:
-        from pymongo import MongoClient
-
-        client = MongoClient(MONGODB_URI)
-        return client[DB_NAME]
-    # local testing fallback
-    try:
-        import mongomock
-
-        client = mongomock.MongoClient()
-        return client[DB_NAME]
-    except Exception as e:  # pragma: no cover - best effort
-        raise RuntimeError("No MONGODB_URI set and mongomock unavailable: %s" % e)
+    """Return the MongoDB database; require MONGODB_URI to be set."""
+    if not MONGODB_URI:
+        raise RuntimeError("MONGODB_URI must be set in the environment")
+    from pymongo import MongoClient
+    client = MongoClient(MONGODB_URI)
+    return client[DB_NAME]

@@ -1,19 +1,18 @@
 Project skeleton created.
 
 Next steps:
-1. Copy `.env.example` to `.env` and fill `MONGODB_URI` and `COHERE_API_KEY` (rotate the key you posted earlier!).
+1. Copy `.env.example` to `.env` and fill `MONGODB_URI`.
 2. Create a virtual environment and install dependencies:
    python -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt
 3. Start the API locally:
    uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 4. Run the fetcher once (after filling .env):
    python scripts/fetch_rss.py
-5. Process an article (mock):
-   python scripts/process_article.py
+5. Refresh feeds manually:
+   python scripts/refresh_feeds.py
 
 Files created:
 - `scripts/fetch_rss.py` - RSS fetcher skeleton
-- `scripts/process_article.py` - processor skeleton (contains mock Cohere call)
 - `scripts/feeds.json` - example feed list
 - `app/api.py` - FastAPI skeleton
 - `web/index.html` - static demo frontend
@@ -27,7 +26,7 @@ DigitalOcean deploy (quick steps)
 1. Create a DigitalOcean account and create an App (or use the App Platform).
 2. Connect your GitHub repo and choose the branch `main`.
 3. Build command: leave empty (Dockerfile present) or use `pip install -r requirements.txt` and start `uvicorn app.api:app --host 0.0.0.0 --port $PORT`.
-4. Set environment variables in DigitalOcean: `MONGODB_URI`, `COHERE_API_KEY`, `MONGODB_DB` (optional).
+4. Set environment variables in DigitalOcean: `MONGODB_URI`, `MONGODB_DB` (optional).
 5. After deployment, set DNS: create a CNAME for `api.yourdomain.com` pointing to the DigitalOcean app hostname (provided by DigitalOcean).
 
 Frontend on GitHub Pages with custom domain
