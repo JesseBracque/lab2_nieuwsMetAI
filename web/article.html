@@ -4,17 +4,37 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>NieuwsMetAI - Artikel</title>
-  <style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}</style>
+  <style>
+    :root{--fg:#111;--muted:#666;--border:#e6e6e6;--bg:#fafafa;--card:#fff}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg);margin:0}
+    header{position:sticky;top:0;background:var(--card);padding:16px 24px;border-bottom:1px solid var(--border)}
+  main{max-width:900px;margin:24px auto;padding:0 16px;display:grid;grid-template-columns:1fr 260px;grid-gap:16px;align-items:start}
+    a{color:#0b57d0}
+  .title{margin-top:0;grid-column:1/2}
+    .meta{color:var(--muted);font-size:13px;margin:8px 0 16px}
+    .content{white-space:pre-wrap;line-height:1.6;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;grid-column:1/2}
+    .hero{width:100%;height:200px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#ddd;grid-column:2/3}
+    #meta.meta{grid-column:1/2}
+    @media (max-width: 820px){
+      main{grid-template-columns:1fr;}
+      .hero{grid-column:1/2;height:220px}
+    }
+  </style>
 </head>
 <body>
-  <a href="/">← Terug</a>
-  <h1 id="title">Laden…</h1>
-  <div id="content">Laden…</div>
+  <header><a href="/">← Terug</a></header>
+  <main>
+    <img id="hero" class="hero" alt="">
+    <h1 id="title" class="title">Laden…</h1>
+    <div id="meta" class="meta"></div>
+    <div id="content" class="content">Laden…</div>
+  </main>
 
   <script>
     const params = new URLSearchParams(location.search);
     const id = params.get('id');
-    const DEFAULT_API = 'https://api.example.com';
+  const DEFAULT_API = 'https://api.example.com';
 
     async function load(){
       let API_BASE = DEFAULT_API;
@@ -27,7 +47,21 @@
         if(!res.ok) throw new Error('API error: '+res.status);
         const a = await res.json();
         document.getElementById('title').textContent = a.title || a.url;
-        document.getElementById('content').textContent = a.content_text || a.content_raw || '';
+        // prefer enriched translation if present
+        let txt = a.content_text || a.content_raw || '';
+        if (Array.isArray(a.translations) && a.translations.length) {
+          const enr = a.translations.find(t => t.type === 'enriched') || a.translations[0];
+          if (enr && enr.text) txt = enr.text;
+        }
+        document.getElementById('content').textContent = txt;
+        // hero image
+        const hero = document.getElementById('hero');
+        if(a.image_url){ hero.src = a.image_url; hero.style.display='block'; } else { hero.style.display='none'; }
+        // meta
+        const meta = document.getElementById('meta');
+        const src = a.source && a.source.name ? a.source.name : '';
+        const date = a.fetched_at ? new Date(a.fetched_at).toLocaleString() : '';
+        meta.textContent = [src,date].filter(Boolean).join(' • ');
       }catch(e){
         document.getElementById('content').textContent = 'Kon artikel niet laden: '+e;
       }

@@ -140,5 +140,59 @@ class CohereClient:
         # final fallback
         return f"[{target_lang.upper()} TRANSLATION - MOCK]\n" + text[:1000]
 
+    def expand_article(self, text: str, target_lang: str = "nl", min_words: int = 350) -> dict | str:
+        """Expand an article with extra background and context using Cohere Chat when available.
+
+        If no real client is configured, returns a deterministic mock that appends a short
+        'Achtergrond' section. Returns either a dict with text+meta or a str.
+        """
+        if not text:
+            return ""
+
+        # no real client -> deterministic mock enrichment
+        if not self._client:
+            extra = (
+                f"\n\n[Achtergrond - MOCK]\n"
+                f"Dit artikel is aangevuld met algemene context en mogelijke achtergronden. "
+                f"Controleer bronnen voor de meest actuele stand van zaken."
+            )
+            return text + extra
+
+        # prefer Chat API if available
+        if self._has_chat:
+            try:
+                prompt = (
+                    f"Breid onderstaande tekst betekenisvol uit naar het {target_lang}. "
+                    f"Voeg feitelijke achtergrond, recente context en relevante uitleg toe. "
+                    f"Vermijd speculatie en hallucinaties; vermeld geen feiten die niet algemeen bekend of verifieerbaar zijn. "
+                    f"Doel: minimaal {min_words} woorden.\n\nTEKST:\n{text}"
+                )
+                resp = self._client.chat.create(
+                    model="command-xlarge-nightly",
+                    messages=[
+                        {"role": "system", "content": "Je bent een nauwkeurige redacteur die feitelijke context toevoegt."},
+                        {"role": "user", "content": prompt},
+                    ],
+                )
+                text_out = self._extract_text_from_response(resp)
+                meta = {"model": "command-xlarge-nightly", "task": "expand_article"}
+                try:
+                    usage = getattr(resp, "usage", None) or getattr(resp, "meta", None)
+                    if usage:
+                        meta["usage"] = usage
+                except Exception:
+                    pass
+                return {"text": text_out, "meta": meta, "prompt": prompt}
+            except Exception as e:
+                logger.warning("Cohere expand_article failed, falling back to mock: %s", e)
+
+        # fallback
+        extra = (
+            f"\n\n[Achtergrond - MOCK]\n"
+            f"Dit artikel is aangevuld met algemene context en mogelijke achtergronden. "
+            f"Controleer bronnen voor de meest actuele stand van zaken."
+        )
+        return text + extra
+
 
 client = CohereClient()

@@ -1,6 +1,20 @@
 [
   {
-    "name": "Example News",
-    "url": "https://example.com/rss"
+    "name": "HLN",
+    "url": "https://www.hln.be/rss.xml",
+    "only_free": true,
+    "skip_patterns": ["/premium", "/plus", "/abonnement", "/abo/", "?paywall", "&paywall="]
+  },
+  {
+    "name": "NOS Algemeen",
+    "url": "https://feeds.nos.nl/nosnieuwsalgemeen"
+  },
+  {
+    "name": "NU.nl Algemeen",
+    "url": "https://www.nu.nl/rss/Algemeen"
+  },
+  {
+    "name": "Tweakers",
+    "url": "https://feeds.feedburner.com/tweakers/mixed"
   }
 ]

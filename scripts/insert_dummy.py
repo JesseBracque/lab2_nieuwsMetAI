@@ -1,6 +1,12 @@
 """Insert a dummy article into the DB for local testing."""
 from __future__ import annotations
 from datetime import datetime
+import os
+import sys
+
+# Ensure project root is on sys.path when running as `python scripts/insert_dummy.py`
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from utils.db import get_db
 
 

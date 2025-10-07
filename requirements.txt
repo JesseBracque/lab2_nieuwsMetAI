@@ -9,3 +9,5 @@ cohere
 langdetect
 pytest
 mongomock
+readability-lxml
+lxml

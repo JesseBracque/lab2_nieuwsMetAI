@@ -3,19 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>NieuwsMetAI - demo</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
-    .article{border-bottom:1px solid #eee;padding:8px 0}
-  </style>
+  <title>NieuwsMetAI</title>
+    <style>
+      :root{--fg:#111;--muted:#666;--border:#e6e6e6;--bg:#fafafa;--card:#fff}
+      *{box-sizing:border-box}
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg);margin:0}
+      header{position:sticky;top:0;background:var(--card);padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px}
+      header .grow{flex:1}
+      .filters{display:flex;align-items:center;gap:12px}
+      .filters input[type="text"]{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;min-width:220px}
+      main{max-width:900px;margin:24px auto;padding:0 16px}
+      h1{margin:0;font-size:20px}
+      .list{display:grid;gap:12px}
+  .article{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+      .meta{font-size:12px;color:var(--muted);margin-top:4px}
+      a.title{color:inherit;text-decoration:none;font-weight:600}
+      a.title:hover{text-decoration:underline}
+      .row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+      .tags{display:flex;gap:1rem;justify-content:flex-end;flex-wrap:wrap}
+      .tag{font-size:12px;color:#245; background:#eef5ff;border:1px solid #cfe3ff;border-radius:999px;padding:2px 8px;white-space:nowrap}
+    </style>
 </head>
 <body>
-  <h1>NieuwsMetAI (demo)</h1>
-  <div id="list">Laden…</div>
+    <header>
+      <h1>NieuwsMetAI</h1>
+      <div class="grow"></div>
+      <nav class="filters" aria-label="Filters">
+        <input id="tagFilter" type="text" placeholder="Filter op tag…" title="Typ om op tags te filteren" />
+      </nav>
+    </header>
+    <main>
+      <div id="list" class="list">Laden…</div>
+    </main>
 
   <script>
     // This frontend reads web/config.json at deploy-time to know the API base URL.
     const DEFAULT_API = 'https://api.example.com'; // replace with your API host or use config.json
+
+    let ALL = [];
+
+    function render(list){
+      const root = document.getElementById('list');
+      if(!list || list.length===0){root.textContent='Geen artikelen gevonden.';return;}
+      root.innerHTML = list.map(a=>{
+        const src = a.source_name ? `<div class="meta">${a.source_name}</div>` : '';
+        const tags = Array.isArray(a.tags) && a.tags.length ? `<div class="tags">${a.tags.slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : '<div class="tags"></div>';
+        return `<div class="article" data-tags="${(a.tags||[]).join(' ').toLowerCase()}"><div class="row"><a class="title" href="article.html?id=${a.id}">${a.title||a.url}</a>${tags}</div>${src}</div>`;
+      }).join('');
+    }
 
     async function load(){
       let API_BASE = DEFAULT_API;
@@ -27,17 +62,38 @@
       try{
         const res = await fetch(API_BASE.replace(/\/$/, '') + '/articles');
         if(!res.ok) throw new Error('API error: '+res.status);
-        const data = await res.json();
-        const root = document.getElementById('list');
-        if(!data || data.length===0) root.textContent = 'Geen artikelen gevonden.';
-        else{
-          root.innerHTML = data.map(a=>`<div class="article"><a href="article.html?id=${a.id}">${a.title||a.url}</a></div>`).join('')
-        }
+        ALL = await res.json();
+        render(ALL);
       }catch(e){
         document.getElementById('list').textContent = 'Kon artikelen niet laden: '+e;
       }
     }
     load();
+
+    // Tag filter logic
+    const input = document.getElementById('tagFilter');
+    function applyFilter(q){
+      const query = String(q||'').trim().toLowerCase();
+      if(!query){ render(ALL); return; }
+      const filtered = ALL.filter(a => Array.isArray(a.tags) && a.tags.some(t => t.toLowerCase().includes(query)));
+      render(filtered);
+    }
+
+    input && input.addEventListener('input', (e)=>{
+      const q = String(e.target.value||'').trim().toLowerCase();
+      applyFilter(q);
+    });
+
+    // Click a tag to filter by it
+    document.addEventListener('click', (e)=>{
+      const el = e.target;
+      if(el && el.classList && el.classList.contains('tag')){
+        const text = el.textContent || '';
+        const inp = document.getElementById('tagFilter');
+        if(inp){ inp.value = text; }
+        applyFilter(text);
+      }
+    });
   </script>
 </body>
 </html>

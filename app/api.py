@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from utils.db import get_db
@@ -6,11 +7,29 @@ from utils.db import get_db
 
 app = FastAPI(title="NieuwsMetAI API")
 
+# Allow the web frontend hosted on braksontimesai.me to call this API from the browser
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://braksontimesai.me",
+        "https://www.braksontimesai.me",
+        # Allow HTTP during initial setup if TLS isn't ready yet
+        "http://braksontimesai.me",
+        "http://www.braksontimesai.me",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class ArticleOut(BaseModel):
     id: str
     title: str | None
     url: str | None
+    image_url: str | None = None
+    source_name: str | None = None
+    tags: list[str] | None = None
 
 
 @app.on_event("startup")
@@ -31,7 +50,14 @@ def list_articles():
     docs = coll.find().sort([("fetched_at", -1)]).limit(50)
     out = []
     for d in docs:
-        out.append({"id": str(d.get("_id")), "title": d.get("title"), "url": d.get("url")})
+        out.append({
+            "id": str(d.get("_id")),
+            "title": d.get("title"),
+            "url": d.get("url"),
+            "image_url": d.get("image_url"),
+            "source_name": (d.get("source") or {}).get("name"),
+            "tags": d.get("tags") or [],
+        })
     return out
 
 
