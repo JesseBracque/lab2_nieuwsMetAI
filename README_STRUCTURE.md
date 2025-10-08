@@ -1,3 +1,5 @@
+FOR EDUCATIONAL PURPOSES!
+
 Project skeleton created.
 
 Next steps:
